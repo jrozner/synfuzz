@@ -137,3 +137,23 @@ pub fn seq(generators: Vec<Box<Generator>>) -> impl Generator {
         generators: generators,
     }
 }
+
+pub struct RepeatN {
+    n: usize,
+    generator: Box<Generator>,
+}
+
+impl Generator for RepeatN {
+    fn generate(&self) -> Vec<u8> {
+        (0..self.n)
+            .flat_map(|_| self.generator.generate())
+            .collect()
+    }
+}
+
+pub fn repeat_n(generator: impl Generator + 'static, n: usize) -> impl Generator {
+    RepeatN {
+        n: n,
+        generator: Box::new(generator),
+    }
+}

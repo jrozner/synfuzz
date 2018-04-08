@@ -19,7 +19,7 @@ pub use value::*;
 // sep_by
 // sep_by1
 // range (n..m times)
-// repeat_n (exactly n times)
+// repeat_n (exactly n times) (done)
 // seq (done)
 
 pub trait Generator {
