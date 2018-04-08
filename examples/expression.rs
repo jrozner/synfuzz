@@ -56,10 +56,17 @@ fn main() {
         remote("number", rules.clone()),
         and(
             remote("operators", rules.clone()),
-            remote("number", rules.clone()),
+            choice(vec![
+                Box::new(remote("expression", rules.clone())),
+                Box::new(remote("number", rules.clone())),
+            ]),
         ),
     );
 
-    let out = expr.generate();
+    register_rule(&rules, "expression", expr);
+
+    let root = remote("expression", rules.clone());
+
+    let out = root.generate();
     println!("{}", String::from_utf8_lossy(&out));
 }
