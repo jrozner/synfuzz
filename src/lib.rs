@@ -8,8 +8,6 @@ pub use value::*;
 
 // many (done)
 // many1 (done)
-// and (done)
-// or (done)
 // remote (call another production) (done)
 // ch (done)
 // byte (done)

@@ -5,7 +5,6 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use synfuzz::Generator;
-use synfuzz::and;
 use synfuzz::ch;
 use synfuzz::choice;
 use synfuzz::many1;
@@ -16,20 +15,8 @@ use synfuzz::seq;
 fn main() {
     let rules = Arc::new(RwLock::new(HashMap::new()));
 
-    let number = and(
-        choice(vec![
-            Box::new(ch('1')),
-            Box::new(ch('2')),
-            Box::new(ch('3')),
-            Box::new(ch('4')),
-            Box::new(ch('5')),
-            Box::new(ch('6')),
-            Box::new(ch('7')),
-            Box::new(ch('8')),
-            Box::new(ch('9')),
-        ]),
-        many1(choice(vec![
-            Box::new(ch('0')),
+    let number = seq(vec![
+        Box::new(choice(vec![
             Box::new(ch('1')),
             Box::new(ch('2')),
             Box::new(ch('3')),
@@ -40,7 +27,19 @@ fn main() {
             Box::new(ch('8')),
             Box::new(ch('9')),
         ])),
-    );
+        Box::new(many1(choice(vec![
+            Box::new(ch('0')),
+            Box::new(ch('1')),
+            Box::new(ch('2')),
+            Box::new(ch('3')),
+            Box::new(ch('4')),
+            Box::new(ch('5')),
+            Box::new(ch('6')),
+            Box::new(ch('7')),
+            Box::new(ch('8')),
+            Box::new(ch('9')),
+        ]))),
+    ]);
 
     register_rule(&rules, "number", number);
 

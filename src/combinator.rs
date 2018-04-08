@@ -8,49 +8,6 @@ use super::Generator;
 
 const MANY_MAX: usize = 20;
 
-pub struct And {
-    left: Box<Generator>,
-    right: Box<Generator>,
-}
-
-impl Generator for And {
-    fn generate(&self) -> Vec<u8> {
-        let mut generated = self.left.generate();
-        generated.append(&mut self.right.generate());
-        generated
-    }
-}
-
-pub fn and(left: impl Generator + 'static, right: impl Generator + 'static) -> impl Generator {
-    And {
-        left: Box::new(left),
-        right: Box::new(right),
-    }
-}
-
-pub struct Or {
-    left: Box<Generator>,
-    right: Box<Generator>,
-}
-
-impl Generator for Or {
-    fn generate(&self) -> Vec<u8> {
-        let num: u32 = thread_rng().gen();
-        if num % 2 == 0 {
-            self.left.generate()
-        } else {
-            self.right.generate()
-        }
-    }
-}
-
-pub fn or(left: impl Generator + 'static, right: impl Generator + 'static) -> impl Generator {
-    Or {
-        left: Box::new(left),
-        right: Box::new(right),
-    }
-}
-
 pub struct Choice {
     choices: Vec<Box<Generator>>,
 }
