@@ -11,6 +11,7 @@ use synfuzz::choice;
 use synfuzz::many1;
 use synfuzz::register_rule;
 use synfuzz::remote;
+use synfuzz::seq;
 
 fn main() {
     let rules = Arc::new(RwLock::new(HashMap::new()));
@@ -52,16 +53,14 @@ fn main() {
 
     register_rule(&rules, "operators", operators);
 
-    let expr = and(
-        remote("number", rules.clone()),
-        and(
-            remote("operators", rules.clone()),
-            choice(vec![
-                Box::new(remote("expression", rules.clone())),
-                Box::new(remote("number", rules.clone())),
-            ]),
-        ),
-    );
+    let expr = seq(vec![
+        Box::new(remote("number", rules.clone())),
+        Box::new(remote("operators", rules.clone())),
+        Box::new(choice(vec![
+            Box::new(remote("expression", rules.clone())),
+            Box::new(remote("number", rules.clone())),
+        ])),
+    ]);
 
     register_rule(&rules, "expression", expr);
 

@@ -21,8 +21,8 @@ pub use value::*;
 // sep_by
 // sep_by1
 // range (n..m times)
-// exactly (exactly n times)
-// sequence
+// repeat_n (exactly n times)
+// seq (done)
 
 pub trait Generator {
     fn generate(&self) -> Vec<u8>;

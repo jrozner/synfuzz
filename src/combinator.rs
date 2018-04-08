@@ -162,3 +162,21 @@ where
 }
 
 pub type Rules = HashMap<String, Box<Generator>>;
+
+pub struct Sequence {
+    generators: Vec<Box<Generator>>,
+}
+
+impl Generator for Sequence {
+    fn generate(&self) -> Vec<u8> {
+        self.generators.iter().flat_map(|g| g.generate()).collect()
+    }
+}
+
+// TODO: create macro seq! that takes n Generators and converts
+// them into a Vec<Box<Generator>>
+pub fn seq(generators: Vec<Box<Generator>>) -> impl Generator {
+    Sequence {
+        generators: generators,
+    }
+}
