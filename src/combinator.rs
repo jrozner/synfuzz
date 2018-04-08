@@ -103,3 +103,24 @@ pub fn many1(generator: impl Generator + 'static) -> impl Generator {
         generator: Box::new(generator),
     }
 }
+
+pub struct Optional {
+    generator: Box<Generator>,
+}
+
+impl Generator for Optional {
+    fn generate(&self) -> Vec<u8> {
+        let num: usize = thread_rng().gen();
+        if num % 2 == 0 {
+            self.generator.generate()
+        } else {
+            vec![]
+        }
+    }
+}
+
+pub fn optional(generator: impl Generator + 'static) -> impl Generator {
+    Optional {
+        generator: Box::new(generator),
+    }
+}
