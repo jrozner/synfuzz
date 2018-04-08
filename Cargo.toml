@@ -1,0 +1,7 @@
+[package]
+name = "synfuzz"
+version = "0.1.0"
+authors = ["Joe Rozner <joe@deadbytes.net>"]
+
+[dependencies]
+rand = "0.4"
