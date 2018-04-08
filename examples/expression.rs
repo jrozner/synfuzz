@@ -9,7 +9,7 @@ use synfuzz::ch;
 use synfuzz::choice;
 use synfuzz::many1;
 use synfuzz::register_rule;
-use synfuzz::remote;
+use synfuzz::rule;
 use synfuzz::seq;
 
 fn main() {
@@ -53,17 +53,17 @@ fn main() {
     register_rule(&rules, "operators", operators);
 
     let expr = seq(vec![
-        Box::new(remote("number", rules.clone())),
-        Box::new(remote("operators", rules.clone())),
+        Box::new(rule("number", rules.clone())),
+        Box::new(rule("operators", rules.clone())),
         Box::new(choice(vec![
-            Box::new(remote("expression", rules.clone())),
-            Box::new(remote("number", rules.clone())),
+            Box::new(rule("expression", rules.clone())),
+            Box::new(rule("number", rules.clone())),
         ])),
     ]);
 
     register_rule(&rules, "expression", expr);
 
-    let root = remote("expression", rules.clone());
+    let root = rule("expression", rules.clone());
 
     let out = root.generate();
     println!("{}", String::from_utf8_lossy(&out));

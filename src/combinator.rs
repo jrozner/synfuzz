@@ -85,28 +85,28 @@ pub fn optional(generator: impl Generator + 'static) -> impl Generator {
     }
 }
 
-pub struct Remote {
-    generators: Arc<RwLock<HashMap<String, Box<Generator>>>>,
+pub struct Rule {
+    rules: Arc<RwLock<HashMap<String, Box<Generator>>>>,
     name: String,
 }
 
-impl Generator for Remote {
+impl Generator for Rule {
     fn generate(&self) -> Vec<u8> {
-        let generators = self.generators.read().unwrap();
-        match generators.get(&self.name) {
+        let rules = self.rules.read().unwrap();
+        match rules.get(&self.name) {
             Some(generator) => generator.generate(),
             None => panic!("rule '{}' does not exist", self.name),
         }
     }
 }
 
-pub fn remote<S>(name: S, generators: Arc<RwLock<Rules>>) -> impl Generator
+pub fn rule<S>(name: S, rules: Arc<RwLock<Rules>>) -> impl Generator
 where
     S: Into<String>,
 {
-    Remote {
+    Rule {
         name: name.into(),
-        generators: generators,
+        rules: rules,
     }
 }
 
