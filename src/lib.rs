@@ -6,26 +6,24 @@ mod value;
 pub use combinator::*;
 pub use value::*;
 
-// many
-// many1
-// and
-// or
-// remote (call another production)
-// ch
+// many (done)
+// many1 (done)
+// and (done)
+// or (done)
+// remote (call another production) (done)
+// ch (done)
 // byte
-// bytes (matches byte slices; good for magic numbers)
-// between
 // not
-// choice (one of n)
-// option
+// choice (one of n) (done)
+// option (done)
 // token
-// string
-// eof
+// string (done)
 // sep_by
 // sep_by1
 // at_most (up to n times)
 // at_least (at least n times)
 // exactly (exactly n times)
+// sequence
 
 pub trait Generator {
     fn generate(&self) -> Vec<u8>;
