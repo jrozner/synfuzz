@@ -1,14 +1,14 @@
 use super::Generator;
 
-pub struct Ch {
+pub struct CharLiteral {
     ch: char,
 }
 
 pub fn ch(ch: char) -> impl Generator {
-    Ch { ch: ch }
+    CharLiteral { ch: ch }
 }
 
-impl Generator for Ch {
+impl Generator for CharLiteral {
     fn generate(&self) -> Vec<u8> {
         let mut s = String::with_capacity(4);
         s.push(self.ch);
@@ -33,6 +33,20 @@ where
     StringLiteral { s: s.into() }
 }
 
+pub struct ByteLiteral {
+    byte: u8,
+}
+
+impl Generator for ByteLiteral {
+    fn generate(&self) -> Vec<u8> {
+        vec![self.byte]
+    }
+}
+
+pub fn byte(byte: u8) -> impl Generator {
+    ByteLiteral { byte: byte }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -47,5 +61,11 @@ mod tests {
     fn test_string() {
         let generator = string("this is a test");
         assert_eq!(generator.generate(), "this is a test".as_bytes());
+    }
+
+    #[test]
+    fn test_byte() {
+        let generator = byte(0x42);
+        assert_eq!(generator.generate(), vec![0x42]);
     }
 }

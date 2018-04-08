@@ -12,7 +12,7 @@ pub use value::*;
 // or (done)
 // remote (call another production) (done)
 // ch (done)
-// byte
+// byte (done)
 // not
 // choice (one of n) (done)
 // option (done)
