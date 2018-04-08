@@ -2,7 +2,7 @@ extern crate synfuzz;
 
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 use synfuzz::Generator;
 use synfuzz::and;
@@ -13,7 +13,7 @@ use synfuzz::register_rule;
 use synfuzz::remote;
 
 fn main() {
-    let rules = Arc::new(Mutex::new(HashMap::new()));
+    let rules = Arc::new(RwLock::new(HashMap::new()));
 
     let number = and(
         choice(vec![

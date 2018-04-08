@@ -2,7 +2,7 @@ use rand::Rng;
 use rand::thread_rng;
 use std::collections::HashMap;
 use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 use super::Generator;
 
@@ -129,13 +129,13 @@ pub fn optional(generator: impl Generator + 'static) -> impl Generator {
 }
 
 pub struct Remote {
-    generators: Arc<Mutex<HashMap<String, Box<Generator>>>>,
+    generators: Arc<RwLock<HashMap<String, Box<Generator>>>>,
     name: String,
 }
 
 impl Generator for Remote {
     fn generate(&self) -> Vec<u8> {
-        let generators = self.generators.lock().unwrap();
+        let generators = self.generators.read().unwrap();
         match generators.get(&self.name) {
             Some(generator) => generator.generate(),
             None => panic!("rule '{}' does not exist", self.name),
@@ -143,7 +143,7 @@ impl Generator for Remote {
     }
 }
 
-pub fn remote<S>(name: S, generators: Arc<Mutex<Rules>>) -> impl Generator
+pub fn remote<S>(name: S, generators: Arc<RwLock<Rules>>) -> impl Generator
 where
     S: Into<String>,
 {
@@ -153,11 +153,11 @@ where
     }
 }
 
-pub fn register_rule<S>(rules: &Arc<Mutex<Rules>>, name: S, rule: impl Generator + 'static)
+pub fn register_rule<S>(rules: &Arc<RwLock<Rules>>, name: S, rule: impl Generator + 'static)
 where
     S: Into<String>,
 {
-    let mut rules = rules.lock().unwrap();
+    let mut rules = rules.write().unwrap();
     rules.insert(name.into(), Box::new(rule));
 }
 
