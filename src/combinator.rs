@@ -157,3 +157,25 @@ pub fn repeat_n(generator: impl Generator + 'static, n: usize) -> impl Generator
         generator: Box::new(generator),
     }
 }
+
+pub struct Range {
+    n: usize,
+    m: usize,
+    generator: Box<Generator>,
+}
+
+impl Generator for Range {
+    fn generate(&self) -> Vec<u8> {
+        let num: usize = thread_rng().gen();
+        let times = (num % (self.n - self.m)) + self.m;
+        (0..times).flat_map(|_| self.generator.generate()).collect()
+    }
+}
+
+pub fn range(generator: impl Generator + 'static, n: usize, m: usize) -> impl Generator {
+    Range {
+        n: n,
+        m: m,
+        generator: Box::new(generator),
+    }
+}
