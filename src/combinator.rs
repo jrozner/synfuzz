@@ -20,8 +20,6 @@ impl Generator for Choice {
     }
 }
 
-// TODO: create macro choice! that takes n Generators and converts
-// them into a Vec<Box<Generator>>
 pub fn choice(choices: Vec<Box<Generator>>) -> impl Generator {
     Choice { choices: choices }
 }
@@ -130,8 +128,6 @@ impl Generator for Sequence {
     }
 }
 
-// TODO: create macro seq! that takes n Generators and converts
-// them into a Vec<Box<Generator>>
 pub fn seq(generators: Vec<Box<Generator>>) -> impl Generator {
     Sequence {
         generators: generators,
@@ -178,4 +174,22 @@ pub fn range(generator: impl Generator + 'static, n: usize, m: usize) -> impl Ge
         m: m,
         generator: Box::new(generator),
     }
+}
+
+#[macro_export]
+macro_rules! choice {
+    ( $( $x:expr ),* ) => {
+        choice(vec![
+            $(Box::new($x)),*
+        ]);
+    };
+}
+
+#[macro_export]
+macro_rules! seq {
+    ( $( $x:expr ),* ) => {
+        seq(vec![
+            $(Box::new($x)),*
+        ]);
+    };
 }

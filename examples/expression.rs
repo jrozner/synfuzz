@@ -1,3 +1,4 @@
+#[macro_use]
 extern crate synfuzz;
 
 use std::collections::HashMap;
@@ -16,50 +17,45 @@ fn main() {
     let rules = Arc::new(RwLock::new(HashMap::new()));
 
     let number = seq(vec![
-        Box::new(choice(vec![
-            Box::new(ch('1')),
-            Box::new(ch('2')),
-            Box::new(ch('3')),
-            Box::new(ch('4')),
-            Box::new(ch('5')),
-            Box::new(ch('6')),
-            Box::new(ch('7')),
-            Box::new(ch('8')),
-            Box::new(ch('9')),
-        ])),
-        Box::new(many1(choice(vec![
-            Box::new(ch('0')),
-            Box::new(ch('1')),
-            Box::new(ch('2')),
-            Box::new(ch('3')),
-            Box::new(ch('4')),
-            Box::new(ch('5')),
-            Box::new(ch('6')),
-            Box::new(ch('7')),
-            Box::new(ch('8')),
-            Box::new(ch('9')),
-        ]))),
+        Box::new(choice!(
+            ch('1'),
+            ch('2'),
+            ch('3'),
+            ch('4'),
+            ch('5'),
+            ch('6'),
+            ch('7'),
+            ch('8'),
+            ch('9')
+        )),
+        Box::new(many1(choice!(
+            ch('0'),
+            ch('1'),
+            ch('2'),
+            ch('3'),
+            ch('4'),
+            ch('5'),
+            ch('6'),
+            ch('7'),
+            ch('8'),
+            ch('9')
+        ))),
     ]);
 
     register_rule(&rules, "number", number);
 
-    let operators = choice(vec![
-        Box::new(ch('*')),
-        Box::new(ch('/')),
-        Box::new(ch('+')),
-        Box::new(ch('-')),
-    ]);
+    let operators = choice!(ch('*'), ch('/'), ch('+'), ch('-'));
 
     register_rule(&rules, "operators", operators);
 
-    let expr = seq(vec![
-        Box::new(rule("number", rules.clone())),
-        Box::new(rule("operators", rules.clone())),
-        Box::new(choice(vec![
-            Box::new(rule("expression", rules.clone())),
-            Box::new(rule("number", rules.clone())),
-        ])),
-    ]);
+    let expr = seq!(
+        rule("number", rules.clone()),
+        rule("operators", rules.clone()),
+        choice!(
+            rule("expression", rules.clone()),
+            rule("number", rules.clone())
+        )
+    );
 
     register_rule(&rules, "expression", expr);
 
