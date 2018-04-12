@@ -19,8 +19,8 @@ fn main() {
 
     let delimiters = ch(' ');
 
-    let number = seq(vec![
-        Box::new(choice!(
+    let number = seq!(
+        choice!(
             ch('1'),
             ch('2'),
             ch('3'),
@@ -30,8 +30,8 @@ fn main() {
             ch('7'),
             ch('8'),
             ch('9')
-        )),
-        Box::new(many1(choice!(
+        ),
+        many1(choice!(
             ch('0'),
             ch('1'),
             ch('2'),
@@ -42,8 +42,8 @@ fn main() {
             ch('7'),
             ch('8'),
             ch('9')
-        ))),
-    ]);
+        ))
+    );
 
     register_rule(&rules, "number", number);
 
