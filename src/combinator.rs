@@ -176,12 +176,12 @@ pub fn range(generator: impl Generator + 'static, n: usize, m: usize) -> impl Ge
     }
 }
 
-pub struct SepBy {
+pub struct JoinWith {
     generators: Vec<Box<Generator>>,
-    delimiters: Box<Generator>,
+    delimiter: Box<Generator>,
 }
 
-impl Generator for SepBy {
+impl Generator for JoinWith {
     fn generate(&self) -> Vec<u8> {
         let mut first = true;
         self.generators
@@ -189,7 +189,7 @@ impl Generator for SepBy {
             .flat_map(|g| {
                 let mut value = g.generate();
                 if !first {
-                    let mut d = self.delimiters.generate();
+                    let mut d = self.delimiter.generate();
                     d.extend(value);
                     value = d;
                 } else {
@@ -201,13 +201,13 @@ impl Generator for SepBy {
     }
 }
 
-pub fn sep_by(
+pub fn join_with(
     generators: Vec<Box<Generator>>,
     delimiters: impl Generator + 'static,
 ) -> impl Generator {
-    SepBy {
+    JoinWith {
         generators: generators,
-        delimiters: Box::new(delimiters),
+        delimiter: Box::new(delimiters),
     }
 }
 
@@ -230,10 +230,10 @@ macro_rules! seq {
 }
 
 #[macro_export]
-macro_rules! sep_by {
-    ( $delimiters:expr, $( $x:expr ),* ) => {
-        sep_by(vec![
+macro_rules! join_with {
+    ( $delimiter:expr, $( $x:expr ),* ) => {
+        join_with(vec![
             $(Box::new($x)),*
-        ], $delimiters);
+        ], $delimiter);
     }
 }

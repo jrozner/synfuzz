@@ -8,10 +8,10 @@ use std::sync::RwLock;
 use synfuzz::Generator;
 use synfuzz::ch;
 use synfuzz::choice;
+use synfuzz::join_with;
 use synfuzz::many1;
 use synfuzz::register_rule;
 use synfuzz::rule;
-use synfuzz::sep_by;
 use synfuzz::seq;
 
 fn main() {
@@ -51,7 +51,7 @@ fn main() {
 
     register_rule(&rules, "operators", operators);
 
-    let expr = sep_by!(
+    let expr = join_with!(
         delimiters,
         rule("number", rules.clone()),
         rule("operators", rules.clone()),
