@@ -11,10 +11,13 @@ use synfuzz::choice;
 use synfuzz::many1;
 use synfuzz::register_rule;
 use synfuzz::rule;
+use synfuzz::sep_by;
 use synfuzz::seq;
 
 fn main() {
     let rules = Arc::new(RwLock::new(HashMap::new()));
+
+    let delimiters = ch(' ');
 
     let number = seq(vec![
         Box::new(choice!(
@@ -48,7 +51,8 @@ fn main() {
 
     register_rule(&rules, "operators", operators);
 
-    let expr = seq!(
+    let expr = sep_by!(
+        delimiters,
         rule("number", rules.clone()),
         rule("operators", rules.clone()),
         choice!(

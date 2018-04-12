@@ -176,6 +176,41 @@ pub fn range(generator: impl Generator + 'static, n: usize, m: usize) -> impl Ge
     }
 }
 
+pub struct SepBy {
+    generators: Vec<Box<Generator>>,
+    delimiters: Box<Generator>,
+}
+
+impl Generator for SepBy {
+    fn generate(&self) -> Vec<u8> {
+        let mut first = true;
+        self.generators
+            .iter()
+            .flat_map(|g| {
+                let mut value = g.generate();
+                if !first {
+                    let mut d = self.delimiters.generate();
+                    d.extend(value);
+                    value = d;
+                } else {
+                    first = false;
+                }
+                value
+            })
+            .collect()
+    }
+}
+
+pub fn sep_by(
+    generators: Vec<Box<Generator>>,
+    delimiters: impl Generator + 'static,
+) -> impl Generator {
+    SepBy {
+        generators: generators,
+        delimiters: Box::new(delimiters),
+    }
+}
+
 #[macro_export]
 macro_rules! choice {
     ( $( $x:expr ),* ) => {
@@ -192,4 +227,13 @@ macro_rules! seq {
             $(Box::new($x)),*
         ]);
     };
+}
+
+#[macro_export]
+macro_rules! sep_by {
+    ( $delimiters:expr, $( $x:expr ),* ) => {
+        sep_by(vec![
+            $(Box::new($x)),*
+        ], $delimiters);
+    }
 }
