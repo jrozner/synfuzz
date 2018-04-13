@@ -51,9 +51,12 @@ pub struct Many1 {
 impl Generator for Many1 {
     fn generate(&self) -> Vec<u8> {
         let num: usize = thread_rng().gen();
-        (1..(num % MANY_MAX))
-            .flat_map(|_| self.generator.generate())
-            .collect()
+        let mut limit = num % MANY_MAX;
+        if limit < 1 {
+            limit = 1;
+        }
+
+        (0..limit).flat_map(|_| self.generator.generate()).collect()
     }
 }
 
