@@ -7,6 +7,7 @@ use std::sync::RwLock;
 use super::Generator;
 
 const MANY_MAX: usize = 20;
+const SEP_BY_MAX: usize = 20;
 
 pub struct Choice {
     choices: Vec<Box<Generator>>,
@@ -208,6 +209,85 @@ pub fn join_with(
     JoinWith {
         generators: generators,
         delimiter: Box::new(delimiters),
+    }
+}
+
+pub struct SepBy {
+    generator: Box<Generator>,
+    separator: Box<Generator>,
+}
+
+impl Generator for SepBy {
+    fn generate(&self) -> Vec<u8> {
+        let num: usize = thread_rng().gen();
+        let limit = num % SEP_BY_MAX;
+
+        let mut first = true;
+        (0..limit)
+            .flat_map(|_| {
+                let mut value = self.generator.generate();
+                if first {
+                    first = false;
+                } else {
+                    let mut separator = self.separator.generate();
+                    separator.extend(self.generator.generate());
+                    value = separator;
+                }
+
+                value
+            })
+            .collect()
+    }
+}
+
+pub fn sep_by(
+    generator: impl Generator + 'static,
+    separator: impl Generator + 'static,
+) -> impl Generator {
+    SepBy {
+        generator: Box::new(generator),
+        separator: Box::new(separator),
+    }
+}
+
+pub struct SepBy1 {
+    generator: Box<Generator>,
+    separator: Box<Generator>,
+}
+
+impl Generator for SepBy1 {
+    fn generate(&self) -> Vec<u8> {
+        let num: usize = thread_rng().gen();
+        let mut limit = num % SEP_BY_MAX;
+        if limit < 1 {
+            limit = 1;
+        }
+
+        let mut first = true;
+        (0..limit)
+            .flat_map(|_| {
+                let mut value = self.generator.generate();
+                if first {
+                    first = false;
+                } else {
+                    let mut separator = self.separator.generate();
+                    separator.extend(self.generator.generate());
+                    value = separator;
+                }
+
+                value
+            })
+            .collect()
+    }
+}
+
+pub fn sep_by1(
+    generator: impl Generator + 'static,
+    separator: impl Generator + 'static,
+) -> impl Generator {
+    SepBy1 {
+        generator: Box::new(generator),
+        separator: Box::new(separator),
     }
 }
 
