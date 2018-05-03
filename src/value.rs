@@ -1,5 +1,12 @@
 use super::Generator;
 
+use rand::distributions::Standard;
+use rand::thread_rng;
+use rand::Rng;
+use std::iter;
+
+const STRING_MAX: usize = 12;
+
 /// CharLiteral is a Generator that will return the specified char for each
 /// call of the generate method
 pub struct CharLiteral {
@@ -17,6 +24,17 @@ impl Generator for CharLiteral {
         s.push(self.ch);
         s.into_bytes()
     }
+
+    fn negate(&self) -> Vec<u8> {
+        // TODO: improbable that we'll generate the same char as the one
+        // specified but we should enforce that this doesn't happen and
+        // generate a new one if so. Also, make sure this is using the Char
+        // Standard impl
+        iter::repeat(())
+            .map(|_| thread_rng().sample(Standard))
+            .take(1)
+            .collect()
+    }
 }
 
 /// StringLiteral is a Generator that will return the specified string for
@@ -28,6 +46,19 @@ pub struct StringLiteral {
 impl Generator for StringLiteral {
     fn generate(&self) -> Vec<u8> {
         Vec::from(self.s.as_bytes())
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // TODO: improbable that we'll generate the same string as the one
+        // specified but we should enforce that this doesn't happen and
+        // generate a new one if so. Also, make sure this is using the Char
+        // Standard impl
+        iter::repeat(())
+            .map::<char, _>(|()| thread_rng().sample(Standard))
+            .take(STRING_MAX)
+            .collect::<String>()
+            .as_bytes()
+            .to_owned()
     }
 }
 
@@ -48,6 +79,17 @@ pub struct ByteLiteral {
 impl Generator for ByteLiteral {
     fn generate(&self) -> Vec<u8> {
         vec![self.byte]
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // TODO: improbable that we'll generate the same byte as the one
+        // specified but we should enforce that this doesn't happen and
+        // generate a new one if so. Also, make sure this is using the u8
+        // Standard impl
+        iter::repeat(())
+            .map(|_| thread_rng().sample(Standard))
+            .take(1)
+            .collect()
     }
 }
 

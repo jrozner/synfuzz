@@ -1,5 +1,5 @@
-use rand::Rng;
 use rand::thread_rng;
+use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
@@ -10,6 +10,9 @@ use super::Generator;
 const MANY_MAX: usize = 20;
 /// The maximum number of repetitions for the SepBy and SepBy1 Generators
 const SEP_BY_MAX: usize = 20;
+/// The maximum number of repetitions for the negation of the RepeatN
+/// Generator
+const REPEAT_MAX: usize = 20;
 
 /// Choice is a Generator that will pick one of the Generators specified in
 /// its choices. Each call to the generate method may return a value from a
@@ -23,6 +26,22 @@ impl Generator for Choice {
         let num: usize = thread_rng().gen();
         let i = num % self.choices.len();
         self.choices[i].generate()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // must match any of of choices, except one, or anything not a choice
+        match self.choices.len() {
+            0 => vec![], // TODO: generate something non-empty
+            1 => self.choices[0].negate(),
+            _ => {
+                let generate_nothing = thread_rng().gen();
+                if generate_nothing {
+                    vec![]
+                } else {
+                    vec![]
+                }
+            }
+        }
     }
 }
 
@@ -43,6 +62,14 @@ impl Generator for Many {
         let num: usize = thread_rng().gen();
         (0..(num % MANY_MAX))
             .flat_map(|_| self.generator.generate())
+            .collect()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // generate nothing or the negation of generator 0..MANY_MAX times
+        let num: usize = thread_rng().gen();
+        (0..(num % MANY_MAX))
+            .flat_map(|_| self.generator.negate())
             .collect()
     }
 }
@@ -69,6 +96,14 @@ impl Generator for Many1 {
 
         (0..limit).flat_map(|_| self.generator.generate()).collect()
     }
+
+    fn negate(&self) -> Vec<u8> {
+        // generate nothing or the negation of generator 0..MANY_MAX times
+        let num: usize = thread_rng().gen();
+        (0..(num % MANY_MAX))
+            .flat_map(|_| self.generator.negate())
+            .collect()
+    }
 }
 
 /// many1 is a helper to create a Many1 Generator
@@ -89,6 +124,16 @@ impl Generator for Optional {
         let num: usize = thread_rng().gen();
         if num % 2 == 0 {
             self.generator.generate()
+        } else {
+            vec![]
+        }
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        let should_generate: bool = thread_rng().gen();
+
+        if should_generate {
+            self.generator.negate()
         } else {
             vec![]
         }
@@ -118,6 +163,15 @@ impl Generator for Rule {
         let rules = self.rules.read().unwrap();
         match rules.get(&self.name) {
             Some(generator) => generator.generate(),
+            None => panic!("rule '{}' does not exist", self.name),
+        }
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // invoke the negation of the rule
+        let rules = self.rules.read().unwrap();
+        match rules.get(&self.name) {
+            Some(generator) => generator.negate(),
             None => panic!("rule '{}' does not exist", self.name),
         }
     }
@@ -167,6 +221,10 @@ impl Generator for Sequence {
     fn generate(&self) -> Vec<u8> {
         self.generators.iter().flat_map(|g| g.generate()).collect()
     }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
+    }
 }
 
 /// seq is a helper to create a Sequence Generator. This is also a macro that
@@ -189,6 +247,18 @@ impl Generator for RepeatN {
     fn generate(&self) -> Vec<u8> {
         (0..self.n)
             .flat_map(|_| self.generator.generate())
+            .collect()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        // repeats any number except n times
+        let mut repetitions = thread_rng().gen::<usize>() / REPEAT_MAX;
+        if repetitions == self.n {
+            repetitions += 1;
+        }
+
+        (0..repetitions)
+            .flat_map(|_| self.generator.negate())
             .collect()
     }
 }
@@ -214,6 +284,10 @@ impl Generator for Range {
         let num: usize = thread_rng().gen();
         let times = (num % (self.n - self.m)) + self.m;
         (0..times).flat_map(|_| self.generator.generate()).collect()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
     }
 }
 
@@ -255,6 +329,10 @@ impl Generator for JoinWith {
                 value
             })
             .collect()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
     }
 }
 
@@ -301,6 +379,10 @@ impl Generator for SepBy {
             })
             .collect()
     }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
+    }
 }
 
 /// sep_by is a helper to create a SepBy Generator
@@ -346,6 +428,10 @@ impl Generator for SepBy1 {
             })
             .collect()
     }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
+    }
 }
 
 /// sep_by1 is a helper to create a SepBy1 Generator
@@ -356,6 +442,30 @@ pub fn sep_by1(
     SepBy1 {
         generator: Box::new(generator),
         separator: Box::new(separator),
+    }
+}
+
+/// Not is a generator that will return the negation of it's generator. The
+/// implemenation is dependent on the negate implementation for all other
+/// generators
+pub struct Not {
+    generator: Box<Generator>,
+}
+
+impl Generator for Not {
+    fn generate(&self) -> Vec<u8> {
+        self.generator.negate()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        self.generator.generate()
+    }
+}
+
+/// not is a helper to generate a Not Generator
+pub fn not(generator: impl Generator + 'static) -> impl Generator {
+    Not {
+        generator: Box::new(generator),
     }
 }
 

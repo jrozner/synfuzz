@@ -12,4 +12,7 @@ pub use value::*;
 pub trait Generator {
     /// Generate a value from the specific implementation of the Generator
     fn generate(&self) -> Vec<u8>;
+
+    /// Generate a value of the negation of the specified Generator
+    fn negate(&self) -> Vec<u8>;
 }
