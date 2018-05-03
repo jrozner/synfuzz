@@ -1,5 +1,6 @@
 use super::Generator;
 
+use rand::distributions::Alphanumeric;
 use rand::distributions::Standard;
 use rand::thread_rng;
 use rand::Rng;
@@ -26,14 +27,12 @@ impl Generator for CharLiteral {
     }
 
     fn negate(&self) -> Vec<u8> {
-        // TODO: improbable that we'll generate the same char as the one
-        // specified but we should enforce that this doesn't happen and
-        // generate a new one if so. Also, make sure this is using the Char
-        // Standard impl
         iter::repeat(())
-            .map(|_| thread_rng().sample(Standard))
+            .map(|_| thread_rng().sample::<char, Standard>(Standard))
+            .filter(|x| *x != self.ch)
             .take(1)
-            .collect()
+            .collect::<String>()
+            .into_bytes()
     }
 }
 
@@ -49,16 +48,19 @@ impl Generator for StringLiteral {
     }
 
     fn negate(&self) -> Vec<u8> {
-        // TODO: improbable that we'll generate the same string as the one
-        // specified but we should enforce that this doesn't happen and
-        // generate a new one if so. Also, make sure this is using the Char
-        // Standard impl
-        iter::repeat(())
-            .map::<char, _>(|()| thread_rng().sample(Standard))
-            .take(STRING_MAX)
-            .collect::<String>()
-            .as_bytes()
-            .to_owned()
+        // TODO: Find a good way to get full unicode with good ut8 only
+        let mut rng = thread_rng();
+        let chars = rng.gen_range(0, STRING_MAX);
+        loop {
+            let generated = iter::repeat(())
+                .map::<char, _>(|()| rng.sample::<char, Alphanumeric>(Alphanumeric))
+                .take(chars)
+                .collect::<String>();
+
+            if generated != self.s {
+                return generated.as_bytes().to_owned();
+            }
+        }
     }
 }
 
@@ -82,12 +84,9 @@ impl Generator for ByteLiteral {
     }
 
     fn negate(&self) -> Vec<u8> {
-        // TODO: improbable that we'll generate the same byte as the one
-        // specified but we should enforce that this doesn't happen and
-        // generate a new one if so. Also, make sure this is using the u8
-        // Standard impl
         iter::repeat(())
             .map(|_| thread_rng().sample(Standard))
+            .filter(|x| *x != self.byte)
             .take(1)
             .collect()
     }
@@ -103,20 +102,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ch() {
+    fn generate_ch() {
         let generator = ch('a');
         assert_eq!(generator.generate(), vec![0x61]);
     }
 
     #[test]
-    fn test_string() {
+    fn negate_ch() {
+        let generator = ch('a');
+        assert_ne!(generator.negate(), vec![0x61]);
+    }
+
+    #[test]
+    fn generate_string() {
         let generator = string("this is a test");
         assert_eq!(generator.generate(), "this is a test".as_bytes());
     }
 
     #[test]
-    fn test_byte() {
+    fn negate_string() {
+        let generator = string("this is a test");
+        let generated = generator.negate();
+        assert_ne!(generated, "this is a test".as_bytes());
+        assert!(generated.len() < STRING_MAX);
+    }
+
+    #[test]
+    fn generate_byte() {
         let generator = byte(0x42);
         assert_eq!(generator.generate(), vec![0x42]);
+    }
+
+    #[test]
+    fn negate_byte() {
+        let generator = byte(0x42);
+        assert_ne!(generator.negate(), vec![0x42]);
     }
 }
