@@ -23,9 +23,10 @@ pub struct Choice {
 
 impl Generator for Choice {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        let i = num % self.choices.len();
-        self.choices[i].generate()
+        match thread_rng().choose(&self.choices) {
+            Some(generator) => generator.generate(),
+            None => panic!("no choices specified"),
+        }
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -59,18 +60,14 @@ pub struct Many {
 
 impl Generator for Many {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        (0..(num % MANY_MAX))
-            .flat_map(|_| self.generator.generate())
-            .collect()
+        let num = thread_rng().gen_range(0, MANY_MAX);
+        (0..num).flat_map(|_| self.generator.generate()).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
         // generate nothing or the negation of generator 0..MANY_MAX times
-        let num: usize = thread_rng().gen();
-        (0..(num % MANY_MAX))
-            .flat_map(|_| self.generator.negate())
-            .collect()
+        let num = thread_rng().gen_range(0, MANY_MAX);
+        (0..num).flat_map(|_| self.generator.negate()).collect()
     }
 }
 
@@ -88,21 +85,14 @@ pub struct Many1 {
 
 impl Generator for Many1 {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        let mut limit = num % MANY_MAX;
-        if limit < 1 {
-            limit = 1;
-        }
-
-        (0..limit).flat_map(|_| self.generator.generate()).collect()
+        let num = thread_rng().gen_range(1, MANY_MAX);
+        (0..num).flat_map(|_| self.generator.generate()).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
         // generate nothing or the negation of generator 0..MANY_MAX times
-        let num: usize = thread_rng().gen();
-        (0..(num % MANY_MAX))
-            .flat_map(|_| self.generator.negate())
-            .collect()
+        let num: usize = thread_rng().gen_range(0, MANY_MAX);
+        (0..num).flat_map(|_| self.generator.negate()).collect()
     }
 }
 
@@ -121,8 +111,7 @@ pub struct Optional {
 
 impl Generator for Optional {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        if num % 2 == 0 {
+        if thread_rng().gen() {
             self.generator.generate()
         } else {
             vec![]
@@ -130,9 +119,7 @@ impl Generator for Optional {
     }
 
     fn negate(&self) -> Vec<u8> {
-        let should_generate: bool = thread_rng().gen();
-
-        if should_generate {
+        if thread_rng().gen() {
             self.generator.negate()
         } else {
             vec![]
@@ -252,7 +239,7 @@ impl Generator for RepeatN {
 
     fn negate(&self) -> Vec<u8> {
         // repeats any number except n times
-        let mut repetitions = thread_rng().gen::<usize>() / REPEAT_MAX;
+        let mut repetitions = thread_rng().gen_range(0, REPEAT_MAX);
         if repetitions == self.n {
             repetitions += 1;
         }
@@ -281,9 +268,10 @@ pub struct Range {
 
 impl Generator for Range {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        let times = (num % (self.n - self.m)) + self.m;
-        (0..times).flat_map(|_| self.generator.generate()).collect()
+        let times = thread_rng().gen_range(self.n, self.m);
+        (self.n..times)
+            .flat_map(|_| self.generator.generate())
+            .collect()
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -360,8 +348,7 @@ pub struct SepBy {
 
 impl Generator for SepBy {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        let limit = num % SEP_BY_MAX;
+        let limit = thread_rng().gen_range(0, SEP_BY_MAX);
 
         let mut first = true;
         (0..limit)
@@ -406,11 +393,7 @@ pub struct SepBy1 {
 
 impl Generator for SepBy1 {
     fn generate(&self) -> Vec<u8> {
-        let num: usize = thread_rng().gen();
-        let mut limit = num % SEP_BY_MAX;
-        if limit < 1 {
-            limit = 1;
-        }
+        let limit = thread_rng().gen_range(1, SEP_BY_MAX);
 
         let mut first = true;
         (0..limit)
