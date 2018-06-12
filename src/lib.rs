@@ -1,4 +1,6 @@
 extern crate rand;
+#[cfg(test)]
+extern crate regex;
 
 mod combinator;
 mod value;

@@ -478,3 +478,136 @@ macro_rules! join_with {
         ], $delimiter);
     }
 }
+
+#[cfg(test)]
+mod test {
+    use regex::Regex;
+
+    use super::*;
+    use value::byte;
+
+    #[test]
+    fn generate_choice() {
+        let generator = choice!(byte(0x41), byte(0x42));
+        let generated = generator.generate();
+        assert!(generated == vec![0x41] || generated == vec![0x42]);
+    }
+
+    #[test]
+    fn negate_choice() {
+        let generator = choice!(byte(0x41), byte(0x42));
+        let generated = generator.negate();
+        assert!(generated != vec![0x41] && generated != vec![0x42]);
+    }
+
+    #[test]
+    fn generate_many() {
+        let generator = many(byte(0x41));
+        let generated = generator.generate();
+        let generated_string = String::from_utf8_lossy(&generated);
+        // assured that the len will always be >= 0 due to usize constraints
+        assert!(generated.len() < MANY_MAX);
+        let r = Regex::new(r"\AA*\z").unwrap();
+        assert!(r.is_match(&generated_string));
+    }
+
+    #[test]
+    fn negate_many() {
+        let generator = many(byte(0x41));
+        let generated = generator.negate();
+        let generated_string = String::from_utf8_lossy(&generated);
+        // assured that the len will always be >= 0 due to usize constraints
+        assert!(generated.len() < MANY_MAX);
+        let r = Regex::new(r"\A[^A]*\z").unwrap();
+        assert!(r.is_match(&generated_string));
+    }
+
+    #[test]
+    fn generate_many1() {
+        let generator = many1(byte(0x41));
+        let generated = generator.generate();
+        let generated_string = String::from_utf8_lossy(&generated);
+        assert!(generated.len() > 0 && generated.len() < MANY_MAX);
+        let r = Regex::new(r"\AA+\z").unwrap();
+        assert!(r.is_match(&generated_string));
+    }
+
+    #[test]
+    fn negate_many1() {
+        let generator = many1(byte(0x41));
+        let generated = generator.negate();
+        let generated_string = String::from_utf8_lossy(&generated);
+        // assured that the len will always be >= 0 due to usize constraints
+        assert!(generated.len() < MANY_MAX);
+        let r = Regex::new(r"\A[^A]*\z").unwrap();
+        assert!(r.is_match(&generated_string));
+    }
+
+    #[test]
+    fn generate_optional() {
+        let generator = optional(byte(0x41));
+        let generated = generator.generate();
+        assert!(generated.len() < 2);
+        if generated.len() > 0 {
+            assert!(generated == vec![0x41]);
+        }
+    }
+
+    #[test]
+    fn negate_optional() {
+        let generator = optional(byte(0x41));
+        let generated = generator.negate();
+        assert!(generated.len() < 2);
+        if generated.len() > 0 {
+            assert_ne!(generated, vec![0x41]);
+        }
+    }
+
+    #[test]
+    fn generate_rule() {
+        let rules = Arc::new(RwLock::new(HashMap::new()));
+        let the_rule = byte(0x41);
+        register_rule(&rules, "rule", the_rule);
+        let generator = rule("rule", rules);
+        let generated = generator.generate();
+        assert!(generated == vec![0x41]);
+    }
+
+    #[test]
+    fn negate_rule() {
+        let rules = Arc::new(RwLock::new(HashMap::new()));
+        let the_rule = byte(0x41);
+        register_rule(&rules, "rule", the_rule);
+        let generator = rule("rule", rules);
+        let generated = generator.negate();
+        assert_ne!(generated, vec![0x41]);
+    }
+
+    #[test]
+    fn generate_repeatn() {
+        let generator = repeat_n(byte(0x41), 5);
+        let generated = generator.generate();
+        assert!(generated == vec![0x41, 0x41, 0x41, 0x41, 0x41]);
+    }
+
+    #[test]
+    fn negate_repeatn() {
+        let generator = repeat_n(byte(0x41), 5);
+        let generated = generator.negate();
+        assert_ne!(generated, vec![0x41, 0x41, 0x41, 0x41, 0x41]);
+    }
+
+    #[test]
+    fn generate_not() {
+        let generator = not(byte(0x41));
+        let generated = generator.generate();
+        assert_ne!(generated, vec![0x41]);
+    }
+
+    #[test]
+    fn negate_not() {
+        let generator = not(byte(0x41));
+        let generated = generator.negate();
+        assert!(generated == vec![0x41]);
+    }
+}
