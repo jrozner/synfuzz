@@ -51,13 +51,20 @@ fn main() {
 
     register_rule(&rules, "operators", operators);
 
-    let expr = join_with!(
-        delimiters,
-        rule("number", rules.clone()),
-        rule("operators", rules.clone()),
-        choice!(
+    let expr = choice!(
+        join_with!(
+            delimiters,
+            rule("number", rules.clone()),
+            rule("operators", rules.clone()),
+            choice!(
+                rule("expression", rules.clone()),
+                rule("number", rules.clone())
+            )
+        ),
+        seq!(
+            ch('('),
             rule("expression", rules.clone()),
-            rule("number", rules.clone())
+            ch(')')
         )
     );
 
