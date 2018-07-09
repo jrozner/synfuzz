@@ -1,0 +1,106 @@
+use ast;
+
+grammar;
+
+pub Grammar: ast::Grammar = {
+    "grammar" <n:GrammarName> ";" <r:Rule*> => ast::Grammar::new(n, r),
+};
+
+GrammarName: String = {
+    UpperId,
+    LowerId,
+};
+
+Rule: ast::Rule = {
+    ParserRule,
+    LexerRule,
+    fragment_rule,
+};
+
+ParserRule: ast::Rule = {
+    <name:LowerId> ":" <body:ParserBody> ";" => ast::Rule::new(name, ast::RuleType::Parser, body),
+};
+
+ParserBody: Vec<ast::Operation> = {
+    <first:ParserBodyPart*> label? <alternates:("|" ParserBodyPart* label?)*> => {
+        if alternates.len() > 0 {
+            let mut r = vec![first];
+            r.extend_from_slice(alternates.iter().map(|a| a.1.clone()).collect::<Vec<Vec<ast::Operation>>>().as_slice());
+            vec![ast::Operation::Alternate(r)]
+        } else {
+            first
+        }
+    },
+};
+
+ParserBodyPart: ast::Operation = {
+    <r:UpperId> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Token(r)),
+    <r:LowerId> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Rule(r)),
+    <r:StringLiteral> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::StringLiteral(r)),
+    "(" <r:ParserBody> ")" <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Group(r)),
+};
+
+Quantifier: String = {
+    "*" => String::from("*"),
+    "+" => String::from("+"),
+    "?" => String::from("?"),
+}
+
+label: () = {
+    "#" UpperId,
+};
+
+LexerRule: ast::Rule = {
+    <name:UpperId> ":" <body:LexerBody> lexer_command? ";" => ast::Rule::new(name, ast::RuleType::Lexer, body),
+};
+
+LexerBody: Vec<ast::Operation> = {
+    <first:lexer_body_part*> label? <alternates:("|" lexer_body_part* label?)*> => {
+        if alternates.len() > 0 {
+            let mut r = vec![first];
+            r.extend_from_slice(alternates.iter().map(|a| a.1.clone()).collect::<Vec<Vec<ast::Operation>>>().as_slice());
+            vec![ast::Operation::Alternate(r)]
+        } else {
+            first
+        }
+    },
+};
+
+lexer_body_part: ast::Operation = {
+    <r:UpperId> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Token(r)),
+    <l:StringLiteral> ".." <r:StringLiteral> => ast::Operation::Range((l, r)),
+    <r:StringLiteral> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::StringLiteral(r)),
+    "(" <r:LexerBody> ")" <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Group(r)),
+    "." <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Any),
+    //CharacterClass <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::CharacterClass),
+};
+
+lexer_command: () = {
+    "->" commands ("," commands)*
+};
+
+commands: () = {
+    "skip",
+    "more",
+    "popMode",
+    "mode" "(" identifier ")",
+    "pushMode" "(" identifier ")",
+    "type" "(" identifier ")",
+    "channel" "(" identifier ")",
+};
+
+identifier: String = {
+    UpperId,
+    LowerId,
+};
+
+fragment_rule: ast::Rule = {
+    "fragment" <name:UpperId> ":" <body:LexerBody> ";" => ast::Rule::new(name, ast::RuleType::Fragment, body),
+}
+
+CharacterClass: String = <s:r"\[(\\]|[^\]])*\]"> => String::from(s);
+
+StringLiteral: String = <s:r"'(\\'|[^'])*'"> => String::from(&s[1..s.len()-1]);
+
+LowerId: String = <s:r"[a-z][a-zA-Z0-9_]*"> => String::from(s);
+UpperId: String = <s:r"[A-Z][a-zA-Z0-9_]*"> => String::from(s);
