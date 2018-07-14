@@ -2,6 +2,11 @@
 name = "synfuzz"
 version = "0.1.0"
 authors = ["Joe Rozner <joe@deadbytes.net>"]
+description = "A toolkit for building grammar based fuzzers"
+repository = "https://www.github.com/jrozner/synfuzz"
+categories = ["parsing", "development-tools::testing"]
+keywords = ["fuzzing"]
+license = "MIT"
 
 [dependencies]
 rand = "0.5.1"
