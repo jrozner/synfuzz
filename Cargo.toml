@@ -10,6 +10,7 @@ license = "MIT"
 
 [dependencies]
 rand = "0.5.1"
+log = "0.4.3"
 
 [dev-dependencies]
 regex = "1.0.0"

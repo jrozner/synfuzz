@@ -7,22 +7,24 @@ use std::sync::RwLock;
 use super::Generator;
 
 /// The maximum number of repetitions for the Many and Many1 Generators
-const MANY_MAX: usize = 20;
+const MANY_MAX: usize = 10;
 /// The maximum number of repetitions for the SepBy and SepBy1 Generators
-const SEP_BY_MAX: usize = 20;
+const SEP_BY_MAX: usize = 10;
 /// The maximum number of repetitions for the negation of the RepeatN
 /// Generator
-const REPEAT_MAX: usize = 20;
+const REPEAT_MAX: usize = 10;
 
 /// Choice is a Generator that will pick one of the Generators specified in
-/// its choices. Each call to the generate method may return a value from a
+///2its choices. Each call to the generate method may return a value from a
 /// different Generator
+#[derive(Debug)]
 pub struct Choice {
-    choices: Vec<Box<Generator>>,
+    pub choices: Vec<Box<Generator>>,
 }
 
 impl Generator for Choice {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Choice");
         match thread_rng().choose(&self.choices) {
             Some(generator) => generator.generate(),
             None => panic!("no choices specified"),
@@ -30,6 +32,7 @@ impl Generator for Choice {
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Choice");
         // must match any of of choices, except one, or anything not a choice
         match self.choices.len() {
             0 => vec![], // TODO: generate something non-empty
@@ -54,17 +57,20 @@ pub fn choice(choices: Vec<Box<Generator>>) -> impl Generator {
 }
 
 /// Many is a Generator that will generate 0 or more values of its generator
+#[derive(Debug)]
 pub struct Many {
-    generator: Box<Generator>,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for Many {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Many");
         let num = thread_rng().gen_range(0, MANY_MAX);
         (0..num).flat_map(|_| self.generator.generate()).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Many");
         // generate nothing or the negation of generator 0..MANY_MAX times
         let num = thread_rng().gen_range(0, MANY_MAX);
         (0..num).flat_map(|_| self.generator.negate()).collect()
@@ -79,17 +85,20 @@ pub fn many(generator: impl Generator + 'static) -> impl Generator {
 }
 
 /// Many1 is a Generator that will generate 1 or more values of its generator
+#[derive(Debug)]
 pub struct Many1 {
-    generator: Box<Generator>,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for Many1 {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Many1");
         let num = thread_rng().gen_range(1, MANY_MAX);
         (0..num).flat_map(|_| self.generator.generate()).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Many1");
         // generate nothing or the negation of generator 0..MANY_MAX times
         let num: usize = thread_rng().gen_range(0, MANY_MAX);
         (0..num).flat_map(|_| self.generator.negate()).collect()
@@ -105,12 +114,14 @@ pub fn many1(generator: impl Generator + 'static) -> impl Generator {
 
 /// Optional is a Generator that will optionally choose to generate exactly 1
 /// of its generator or and empty value
+#[derive(Debug)]
 pub struct Optional {
-    generator: Box<Generator>,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for Optional {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Optional");
         if thread_rng().gen() {
             self.generator.generate()
         } else {
@@ -119,6 +130,7 @@ impl Generator for Optional {
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Optional");
         if thread_rng().gen() {
             self.generator.negate()
         } else {
@@ -140,13 +152,15 @@ pub fn optional(generator: impl Generator + 'static) -> impl Generator {
 ///
 /// Only names that have already been registered should be used. If a
 /// corresponding rule does not exist when generate is called it will panic.
+#[derive(Debug)]
 pub struct Rule {
-    rules: Arc<RwLock<HashMap<String, Box<Generator>>>>,
-    name: String,
+    pub rules: Arc<RwLock<HashMap<String, Box<Generator>>>>,
+    pub name: String,
 }
 
 impl Generator for Rule {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Rule {}", self.name);
         let rules = self.rules.read().unwrap();
         match rules.get(&self.name) {
             Some(generator) => generator.generate(),
@@ -155,6 +169,7 @@ impl Generator for Rule {
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Rule {}", self.name);
         // invoke the negation of the rule
         let rules = self.rules.read().unwrap();
         match rules.get(&self.name) {
@@ -200,12 +215,14 @@ pub type Rules = HashMap<String, Box<Generator>>;
 /// in which they are specified. This is useful for sequences of specific
 /// bytes or chars but when multiple tokens are desired JoinWith is likely
 /// more helpful
+#[derive(Debug)]
 pub struct Sequence {
-    generators: Vec<Box<Generator>>,
+    pub generators: Vec<Box<Generator>>,
 }
 
 impl Generator for Sequence {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Sequence");
         self.generators.iter().flat_map(|g| g.generate()).collect()
     }
 
@@ -225,19 +242,22 @@ pub fn seq(generators: Vec<Box<Generator>>) -> impl Generator {
 
 /// RepeastN is a Generator that will product the specified Generator between
 /// 0 and n times
+#[derive(Debug)]
 pub struct RepeatN {
-    n: usize,
-    generator: Box<Generator>,
+    pub n: usize,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for RepeatN {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate RepeatN");
         (0..self.n)
             .flat_map(|_| self.generator.generate())
             .collect()
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate RepeatN");
         // repeats any number except n times
         let mut repetitions = thread_rng().gen_range(0, REPEAT_MAX);
         if repetitions == self.n {
@@ -260,14 +280,16 @@ pub fn repeat_n(generator: impl Generator + 'static, n: usize) -> impl Generator
 
 /// Range is a Generator that will produce the specified Generator between n
 /// and m times
+#[derive(Debug)]
 pub struct Range {
-    n: usize,
-    m: usize,
-    generator: Box<Generator>,
+    pub n: usize,
+    pub m: usize,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for Range {
     fn generate(&self) -> Vec<u8> {
+        trace!("repeat Range");
         let times = thread_rng().gen_range(self.n, self.m);
         (self.n..times)
             .flat_map(|_| self.generator.generate())
@@ -295,13 +317,15 @@ pub fn range(generator: impl Generator + 'static, n: usize, m: usize) -> impl Ge
 /// be a separator (eg. some whitespace) between them. In that case this
 /// should be used instead of Sequence so specify the sequence of tokens for
 /// a rule.
+#[derive(Debug)]
 pub struct JoinWith {
-    generators: Vec<Box<Generator>>,
-    delimiter: Box<Generator>,
+    pub generators: Vec<Box<Generator>>,
+    pub delimiter: Box<Generator>,
 }
 
 impl Generator for JoinWith {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate JoinWith");
         let mut first = true;
         self.generators
             .iter()
@@ -341,13 +365,15 @@ pub fn join_with(
 /// SepBy is a Generator that will repeat the generator 0 or more times
 /// separated by the specified separator. A single match will result in no
 /// separator being present, only there there is more than one
+#[derive(Debug)]
 pub struct SepBy {
-    generator: Box<Generator>,
-    separator: Box<Generator>,
+    pub generator: Box<Generator>,
+    pub separator: Box<Generator>,
 }
 
 impl Generator for SepBy {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate SepBy");
         let limit = thread_rng().gen_range(0, SEP_BY_MAX);
 
         let mut first = true;
@@ -386,13 +412,15 @@ pub fn sep_by(
 /// SepBy is a Generator that will repeat the generator 1 or more times
 /// separated by the specified separator. A single match will result in no
 /// separator being present, only there there is more than one
+#[derive(Debug)]
 pub struct SepBy1 {
-    generator: Box<Generator>,
-    separator: Box<Generator>,
+    pub generator: Box<Generator>,
+    pub separator: Box<Generator>,
 }
 
 impl Generator for SepBy1 {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate SepBy1");
         let limit = thread_rng().gen_range(1, SEP_BY_MAX);
 
         let mut first = true;
@@ -431,16 +459,19 @@ pub fn sep_by1(
 /// Not is a generator that will return the negation of it's generator. The
 /// implemenation is dependent on the negate implementation for all other
 /// generators
+#[derive(Debug)]
 pub struct Not {
-    generator: Box<Generator>,
+    pub generator: Box<Generator>,
 }
 
 impl Generator for Not {
     fn generate(&self) -> Vec<u8> {
+        trace!("generate Not");
         self.generator.negate()
     }
 
     fn negate(&self) -> Vec<u8> {
+        trace!("negate Not");
         self.generator.generate()
     }
 }

@@ -10,8 +10,9 @@ const STRING_MAX: usize = 12;
 
 /// CharLiteral is a Generator that will return the specified char for each
 /// call of the generate method
+#[derive(Debug)]
 pub struct CharLiteral {
-    ch: char,
+    pub ch: char,
 }
 
 /// ch is a helper to create a CharLiteral Generator
@@ -38,8 +39,9 @@ impl Generator for CharLiteral {
 
 /// StringLiteral is a Generator that will return the specified string for
 /// each call of the generate method
+#[derive(Debug)]
 pub struct StringLiteral {
-    s: String,
+    pub s: String,
 }
 
 impl Generator for StringLiteral {
@@ -74,8 +76,9 @@ where
 
 /// ByteLiteral is a generator that will return the specified byte for each
 /// call of the generate method
+#[derive(Debug)]
 pub struct ByteLiteral {
-    byte: u8,
+    pub byte: u8,
 }
 
 impl Generator for ByteLiteral {
@@ -100,9 +103,10 @@ pub fn byte(byte: u8) -> impl Generator {
 /// CharRange is a generator that will return bytes that represent a char between
 /// n and m inclusively. This is useful for implementing ranges of chars such as
 /// in a regular expression's character set
+#[derive(Debug)]
 pub struct CharRange {
-    n: char,
-    m: char,
+    pub n: char,
+    pub m: char,
 }
 
 impl Generator for CharRange {

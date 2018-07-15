@@ -1,6 +1,8 @@
 extern crate rand;
 #[cfg(test)]
 extern crate regex;
+#[macro_use]
+extern crate log;
 
 mod combinator;
 mod value;
@@ -11,7 +13,7 @@ pub use value::*;
 /// A trait for all Generators to implement. This allows pervasive use of
 /// impl trait throughout the implementations of the various Generators and
 /// allows not specifying concrete types.
-pub trait Generator {
+pub trait Generator: ::std::fmt::Debug {
     /// Generate a value from the specific implementation of the Generator
     fn generate(&self) -> Vec<u8>;
 
