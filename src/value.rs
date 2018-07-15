@@ -97,6 +97,32 @@ pub fn byte(byte: u8) -> impl Generator {
     ByteLiteral { byte: byte }
 }
 
+/// CharRange is a generator that will return bytes that represent a char between
+/// n and m inclusively. This is useful for implementing ranges of chars such as
+/// in a regular expression's character set
+pub struct CharRange {
+    n: char,
+    m: char,
+}
+
+impl Generator for CharRange {
+    fn generate(&self) -> Vec<u8> {
+        let c = thread_rng().gen_range(self.n as u8, self.m as u8) as char;
+        let mut s = String::with_capacity(4);
+        s.push(c);
+        s.into_bytes()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
+    }
+}
+
+/// char_range is a helper to create a CharRange Generator
+pub fn char_range(n: char, m: char) -> impl Generator {
+    CharRange { n: n, m: m }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -132,10 +158,17 @@ mod tests {
         let generator = byte(0x42);
         assert_eq!(generator.generate(), vec![0x42]);
     }
-
     #[test]
     fn negate_byte() {
         let generator = byte(0x42);
         assert_ne!(generator.negate(), vec![0x42]);
+    }
+
+    #[test]
+    fn generate_char_range() {
+        let generator = char_range('a', 'c');
+        let generated = generator.generate();
+        let c = generated[0];
+        assert!(c >= 0x61 && c <= 0x63);
     }
 }
