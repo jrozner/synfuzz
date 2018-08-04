@@ -1,5 +1,5 @@
 [package]
-name = "antlr4"
+name = "synfuzz-antlr4"
 version = "0.1.0"
 authors = ["Joe Rozner <joe@deadbytes.net>"]
 description = "A synfuzz frontend for ANTLR 4 grammars"
