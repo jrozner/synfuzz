@@ -2,3 +2,4 @@
 **/*.rs.bk
 Cargo.lock
 src/antlr4.rs
+.vscode
