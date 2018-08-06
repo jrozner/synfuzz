@@ -127,6 +127,31 @@ pub fn char_range(n: char, m: char) -> impl Generator {
     CharRange { n: n, m: m }
 }
 
+/// Any is a Generator that generates one character worth of value
+#[derive(Debug)]
+pub struct Any {}
+
+impl Generator for Any {
+    fn generate(&self) -> Vec<u8> {
+        let mut rng = thread_rng();
+        iter::repeat(())
+            .map::<char, _>(|()| rng.sample::<char, Alphanumeric>(Alphanumeric))
+            .take(1)
+            .collect::<String>()
+            .as_bytes()
+            .to_owned()
+    }
+
+    fn negate(&self) -> Vec<u8> {
+        unimplemented!()
+    }
+}
+
+/// any is a helper to create an Any Generator
+pub fn any() -> impl Generator {
+    Any {}
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -174,5 +199,12 @@ mod tests {
         let generated = generator.generate();
         let c = generated[0];
         assert!(c >= 0x61 && c <= 0x63);
+    }
+
+    #[test]
+    fn generate_any() {
+        let generator = any();
+        let generated = generator.generate();
+        assert!(String::from_utf8(generated).is_ok());
     }
 }
