@@ -1,4 +1,5 @@
 use ast;
+use charset;
 
 grammar;
 
@@ -72,7 +73,13 @@ lexer_body_part: ast::Operation = {
     <r:StringLiteral> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::StringLiteral(r)),
     "(" <r:LexerBody> ")" <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Group(r)),
     "." <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Any),
-    //CharacterClass <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::CharacterClass),
+    <not:"~"?> <cc:CharacterClass> <q:Quantifier*> => {
+        if not.is_some() {
+            ast::unroll_quantifier(q, ast::Operation::Not(Box::new(charset::parse_charset(&cc))))
+        } else {
+            ast::unroll_quantifier(q, charset::parse_charset(&cc))
+        }
+    },
 };
 
 lexer_command: () = {

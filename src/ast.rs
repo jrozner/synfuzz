@@ -34,6 +34,9 @@ pub enum Operation {
     Range((String, String)),
     Any,
     CharacterClass(Vec<Operation>),
+    Char(char),
+    CharRange((char, char)),
+    Not(Box<Operation>),
 }
 
 #[derive(Debug, Clone)]
