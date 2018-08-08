@@ -7,12 +7,12 @@ use std::sync::RwLock;
 use super::Generator;
 
 /// The maximum number of repetitions for the Many and Many1 Generators
-const MANY_MAX: usize = 10;
+const MANY_MAX: usize = 5;
 /// The maximum number of repetitions for the SepBy and SepBy1 Generators
-const SEP_BY_MAX: usize = 10;
+const SEP_BY_MAX: usize = 5;
 /// The maximum number of repetitions for the negation of the RepeatN
 /// Generator
-const REPEAT_MAX: usize = 10;
+const REPEAT_MAX: usize = 5;
 
 /// Choice is a Generator that will pick one of the Generators specified in
 ///2its choices. Each call to the generate method may return a value from a
@@ -339,8 +339,7 @@ impl Generator for JoinWith {
                     first = false;
                 }
                 value
-            })
-            .collect()
+            }).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -389,8 +388,7 @@ impl Generator for SepBy {
                 }
 
                 value
-            })
-            .collect()
+            }).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -436,8 +434,7 @@ impl Generator for SepBy1 {
                 }
 
                 value
-            })
-            .collect()
+            }).collect()
     }
 
     fn negate(&self) -> Vec<u8> {
