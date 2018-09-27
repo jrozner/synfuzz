@@ -1,11 +1,9 @@
-#[macro_use]
 extern crate synfuzz;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::RwLock;
 
-use synfuzz::Generator;
 use synfuzz::ch;
 use synfuzz::choice;
 use synfuzz::join_with;
@@ -13,6 +11,7 @@ use synfuzz::many1;
 use synfuzz::register_rule;
 use synfuzz::rule;
 use synfuzz::seq;
+use synfuzz::Generator;
 
 fn main() {
     let rules = Arc::new(RwLock::new(HashMap::new()));
@@ -61,11 +60,7 @@ fn main() {
                 rule("number", rules.clone())
             )
         ),
-        seq!(
-            ch('('),
-            rule("expression", rules.clone()),
-            ch(')')
-        )
+        seq!(ch('('), rule("expression", rules.clone()), ch(')'))
     );
 
     register_rule(&rules, "expression", expr);
