@@ -1,10 +1,10 @@
 #[macro_use]
 extern crate failure;
+#[macro_use]
 extern crate lalrpop_util;
 extern crate log;
 extern crate synfuzz;
 
-mod antlr4;
 mod ast;
 mod charset;
 
@@ -20,6 +20,8 @@ use synfuzz::{
     byte, register_rule, Any, CharLiteral, CharRange, Choice, Generator, JoinWith, Many, Many1,
     Not, Optional, Rule, Rules, Sequence, StringLiteral,
 };
+
+lalrpop_mod!(pub antlr4);
 
 /// generate_rules takes the path to an ANTLR4 grammar file and returns a set of
 /// rules that represent the parsed file
