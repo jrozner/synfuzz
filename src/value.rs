@@ -6,7 +6,7 @@ use rand::thread_rng;
 use rand::Rng;
 use std::iter;
 
-const STRING_MAX: usize = 12;
+const STRING_MAX: usize = 32;
 
 /// CharLiteral is a Generator that will return the specified char for each
 /// call of the generate method
