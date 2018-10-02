@@ -80,7 +80,8 @@ fn translate_rule(
                             Box::new(Sequence { generators: parts }) as Box<dyn Generator>
                         }
                     }
-                }).collect::<Vec<Box<dyn Generator>>>();
+                })
+                .collect::<Vec<Box<dyn Generator>>>();
             return Box::new(Choice { choices: choices });
         }
         ast::Operation::Any => Box::new(Any {}),

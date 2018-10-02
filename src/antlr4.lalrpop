@@ -68,10 +68,28 @@ LexerBody: Vec<ast::Operation> = {
 };
 
 lexer_body_part: ast::Operation = {
-    <r:UpperId> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Token(r)),
+    <not:"~"?> <r:UpperId> <q:Quantifier*> => {
+        if not.is_some() {
+            ast::unroll_quantifier(q, ast::Operation::Not(Box::new(ast::Operation::Token(r))))
+        } else {
+            ast::unroll_quantifier(q, ast::Operation::Token(r))
+        }
+    },
     <l:StringLiteral> ".." <r:StringLiteral> => ast::Operation::Range((l, r)),
-    <r:StringLiteral> <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::StringLiteral(r)),
-    "(" <r:LexerBody> ")" <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Group(r)),
+    <not:"~"?> <r:StringLiteral> <q:Quantifier*> => {
+        if not.is_some() {
+            ast::unroll_quantifier(q, ast::Operation::Not(Box::new(ast::Operation::StringLiteral(r))))
+        } else {
+            ast::unroll_quantifier(q, ast::Operation::StringLiteral(r))
+        }
+    },
+    <not:"~"?> "(" <r:LexerBody> ")" <q:Quantifier*> => {
+        if not.is_some() {
+            ast::unroll_quantifier(q, ast::Operation::Not(Box::new(ast::Operation::Group(r))))
+        } else {
+            ast::unroll_quantifier(q, ast::Operation::Group(r))
+        }
+    },
     "." <q:Quantifier*> => ast::unroll_quantifier(q, ast::Operation::Any),
     <not:"~"?> <cc:CharacterClass> <q:Quantifier*> => {
         if not.is_some() {
