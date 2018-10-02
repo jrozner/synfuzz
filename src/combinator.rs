@@ -227,7 +227,8 @@ impl Generator for Sequence {
     }
 
     fn negate(&self) -> Vec<u8> {
-        unimplemented!()
+        trace!("negate Sequence");
+        self.generators.iter().flat_map(|g| g.negate()).collect()
     }
 }
 
@@ -339,7 +340,8 @@ impl Generator for JoinWith {
                     first = false;
                 }
                 value
-            }).collect()
+            })
+            .collect()
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -388,7 +390,8 @@ impl Generator for SepBy {
                 }
 
                 value
-            }).collect()
+            })
+            .collect()
     }
 
     fn negate(&self) -> Vec<u8> {
@@ -434,7 +437,8 @@ impl Generator for SepBy1 {
                 }
 
                 value
-            }).collect()
+            })
+            .collect()
     }
 
     fn negate(&self) -> Vec<u8> {
