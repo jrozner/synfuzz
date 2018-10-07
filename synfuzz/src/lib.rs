@@ -1,4 +1,5 @@
 extern crate rand;
+
 #[cfg(test)]
 extern crate regex;
 #[macro_use]

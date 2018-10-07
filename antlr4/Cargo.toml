@@ -1,0 +1,19 @@
+[package]
+name = "synfuzz-antlr4"
+version = "0.1.0"
+authors = ["Joe Rozner <joe@deadbytes.net>"]
+description = "A synfuzz frontend for ANTLR 4 grammars"
+repository = "https://www.github.com/jrozner/synfuzz-antlr4"
+categories = ["parsing", "development-tools::testing"]
+keywords = ["fuzzing"]
+license = "MIT"
+
+[dependencies]
+lalrpop-util = "0.16.0"
+regex = "1.0.5"
+synfuzz = { path = "../synfuzz" }
+log = "0.4.5"
+failure = "0.1.2"
+
+[build-dependencies]
+lalrpop = "0.16.0"
