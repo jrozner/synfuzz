@@ -1,5 +1,3 @@
-#[macro_use]
-extern crate synfuzz;
 extern crate synfuzz_antlr4;
 
 use synfuzz_antlr4::generate_rules;
