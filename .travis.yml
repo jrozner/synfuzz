@@ -6,4 +6,4 @@ rust:
   - nightly
 script:
   - |
-    cargo test ./synfuzz
+    cargo test
